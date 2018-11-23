@@ -1,10 +1,18 @@
 
 
 
+
+
+
 class Forecaster(object):
     """Wrapper for time series forecasting
     """
-    def __init__(self):
+    def __init__(self,data):
+
+        self.data = data
+
+
+    def predict(self):
         pass
 
 
