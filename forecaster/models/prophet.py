@@ -24,28 +24,39 @@ class ProphetForecaster(Forecaster):
     def predict(self,
             periods = 30,
             yearly_seasonality = "auto",
-            daily_seasonality = "auto",
-            apply_log = True,
             show = True,
             changepoint_prior_scale=0.05,
+            train = None,
             **kwargs):
 
         """Time Series forecasting using Facebook Prophet library
         """
 
+        if train is None:
+            train = self.data
+
+
         # Prepare the data
-        df = pd.DataFrame(self.data[[self.data._target]]).reset_index()
+        df = pd.DataFrame(train[[self.data._target]]).reset_index()
         df.columns = ["ds","y"]
+
+        # Prepare daily seasonality
+        if self.data._freq == "D":
+            daily_seasonality = True
+        else:
+            daily_seasonality = False
+
 
         # Prepare the model
         self.model = Prophet(
-            yearly_seasonality=yearly_seasonality,
+            yearly_seasonality=True,
             daily_seasonality=daily_seasonality,
             changepoint_prior_scale=changepoint_prior_scale,
             **kwargs)
 
         # Add seasonality
-        self.model.add_seasonality(name='monthly', period=30, fourier_order=4)
+        if self.data._freq in ["D","M"]:
+            self.model.add_seasonality(name='monthly', period=30, fourier_order=4)
 
         # Fit the model
         self.model.fit(df)
@@ -76,3 +87,9 @@ class ProphetForecaster(Forecaster):
 
 
         return forecast,new_ts
+
+
+    def train_test_predict(self,**kwargs):
+        
+
+        train,test = 

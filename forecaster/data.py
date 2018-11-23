@@ -35,6 +35,7 @@ class Data(pd.DataFrame):
             dayfirst (bool): argument for ``pd.to_datetime`` function.
 
         """
+        print("Reading input data for Forecaster model")
 
         # Convert date column to datetime and index
         data = data.copy()
@@ -45,7 +46,10 @@ class Data(pd.DataFrame):
         super().__init__(data)
 
         # Set attributes
+        assert target in data.columns
         self._target = target
+        self._freq = self.index.inferred_freq
+        print(f"Inferred time granularity is {self._freq}")
 
 
 
@@ -87,10 +91,24 @@ class Data(pd.DataFrame):
 
     #--------------------------------------------------------------------------------
     # PERFORMANCE MEASUREMENT
+
+
+    @staticmethod
+    def _get_readable_freq(freq):
+        if freq == "D":
+            return "days"
+        elif freq == "M":
+            return "months"
+        elif freq == "W":
+            return "weeks"
     
 
-    def train_test_split(self):
-        pass
+    def train_test_split(self,periods = 30):
+        print(f"Splitting data for testing on the last {periods} {self._get_readable_freq(self._freq)}")
+
+        train = self.iloc[:-periods]
+        test = self.iloc[-periods:]
+        return train,test
 
 
     def CV_split(self):
