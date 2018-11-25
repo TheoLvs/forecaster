@@ -7,6 +7,10 @@ It provides time series functions and prepare data for the forecaster model
 
 Todo:
     * Add create_time_features() method
+    * Add Time Series cross validation
+    * Add visualization for time series
+    * Add time series clustering
+
 
 """
 
@@ -118,7 +122,43 @@ class Data(pd.DataFrame):
 
 
 
+# def train_test_split(ds, n_splits=3):
+#     """Just a reimplementation of scikit-learn's TimeSeriesSplit that
+#     outputs a TimeSeriesDataset instead of numpy arrays.
+#     """
+   
+#     df = ds.build_dataframe()
+#     df.sort_index(inplace=True)
+
+#     tscv = TimeSeriesSplit(n_splits=n_splits)
+
+#     for train_index, test_index in tscv.split(df.as_matrix()):
+
+#         df_train, df_test = df.iloc[train_index, :], df.iloc[test_index]
+
+#         ds_train = TimeSeriesDataset(dataframe=df_train, target=ds.target)
+#         ds_test = TimeSeriesDataset(dataframe=df_test, target=ds.target)
+
+#         yield (ds_train, ds_test)
 
 
+# def sliding_split(ds, train_size, test_size, step=1):
+#     """A cross validation with fixed-size, sliding train & test sets.
+#     Is meant to test stability over time.
+#     """
+   
+#     df = ds.build_dataframe()
+#     df.sort_index(inplace=True)
 
+#     i = 0
+#     while i+train_size+test_size <= len(df):
 
+#         df_train = df.iloc[i:i+train_size, :]
+#         df_test = df.iloc[i+train_size:i+train_size+test_size, :]
+
+#         ds_train = TimeSeriesDataset(dataframe=df_train, target=ds.target)
+#         ds_test = TimeSeriesDataset(dataframe=df_test, target=ds.target)
+
+#         yield (ds_train, ds_test)
+
+#         i += step
