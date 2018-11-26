@@ -43,7 +43,7 @@ class ProphetForecaster(Forecaster):
         df.columns = ["ds","y"]
 
         # Prepare daily seasonality
-        if self.data._freq == "D":
+        if self.data._freq not in ["W","M"]:
             daily_seasonality = True
         else:
             daily_seasonality = False
@@ -57,7 +57,7 @@ class ProphetForecaster(Forecaster):
             **kwargs)
 
         # Add seasonality
-        if self.data._freq in ["D","M"]:
+        if self.data._freq in ["D","W","M"]:
             self.model.add_seasonality(name='monthly', period=30, fourier_order=4)
 
         # Fit the model
@@ -86,32 +86,15 @@ class ProphetForecaster(Forecaster):
 
 
         prediction = forecast[["ds","yhat"]].copy().rename(columns = {"yhat":self.data._target,"ds":"dates"}).set_index("dates")[self.data._target]
-        pred_train,pred = prediction.iloc[:-periods],prediction.iloc[-periods:]
+        yhat_train,yhat = prediction.iloc[:-periods],prediction.iloc[-periods:]
 
 
-        return pred,pred_train,forecast
-
-
-
+        return yhat,yhat_train,forecast
 
 
 
-    def train_test_predict(self,periods = 30,**kwargs):
-        
-
-        train,test = self.data.train_test_split(periods = periods,**kwargs)
 
 
-        pred_test,pred_train,_ = self.predict(train = train,show = False)
 
-
-        y_train,y_test = train[self.data._target],test[self.data._target]
-
-
-        metrics_train = self._compute_all_metrics(y_train,pred_train)
-        metrics_test = self._compute_all_metrics(y_test,pred_test)
-
-
-        return metrics_train,metrics_test
 
 

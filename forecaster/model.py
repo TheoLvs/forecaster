@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 # Custom
 
 
-
+import warnings
+warnings.filterwarnings("ignore")
 
 
 class Forecaster(object):
@@ -55,6 +56,26 @@ class Forecaster(object):
 
 
 
+    def train_test_predict(self,periods = 30,**kwargs):
+        
+
+        train,test = self.data.train_test_split(periods = periods,**kwargs)
+
+
+        yhat_test,yhat_train,_ = self.predict(train = train,show = False)
+
+
+        y_train,y_test = train[self.data._target],test[self.data._target]
+
+
+        metrics_train = self._compute_all_metrics(y_train,yhat_train)
+        metrics_test = self._compute_all_metrics(y_test,yhat_test)
+
+
+        return metrics_train,metrics_test
+
+
+        
 
 class GranularForecaster(object):
     def __init__(self):
