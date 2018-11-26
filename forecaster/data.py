@@ -10,6 +10,7 @@ Todo:
     * Add Time Series cross validation
     * Add visualization for time series
     * Add time series clustering
+    * Tsfresh features
 
 
 """
@@ -99,15 +100,34 @@ class Data(pd.DataFrame):
 
     @staticmethod
     def _get_readable_freq(freq):
+        """Helper static method to convert frequencies to a readable format
+
+        Args:
+            freq (str): the input frequency inferred from Pandas DateTime indexes
+
+        Returns:
+            str: the readable frequency
+        
+        """
         if freq == "D":
             return "days"
         elif freq == "M":
             return "months"
         elif freq == "W":
             return "weeks"
+        else:
+            return freq
     
 
     def train_test_split(self,periods = 30):
+        """Simple train test split function to separate the last moments of the time series
+
+        Args:
+            periods (int): the input frequency inferred from Pandas DateTime indexes
+
+        Returns:
+            str: the readable frequency
+        """
         print(f"Splitting data for testing on the last {periods} {self._get_readable_freq(self._freq)}")
 
         train = self.iloc[:-periods]

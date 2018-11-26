@@ -36,6 +36,8 @@ class ProphetForecaster(Forecaster):
             train = self.data
 
 
+
+
         # Prepare the data
         df = pd.DataFrame(train[[self.data._target]]).reset_index()
         df.columns = ["ds","y"]
@@ -70,7 +72,7 @@ class ProphetForecaster(Forecaster):
 
         if show:
             self.model.plot(forecast)
-            plt.axvline(x = self.data.index[-1],color = 'red',linestyle = "-",linewidth=2,label = "now")
+            plt.axvline(x = train.index[-1],color = 'red',linestyle = "-",linewidth=2,label = "now")
             plt.legend()
             plt.title("Prophet prediction")
             plt.show()
@@ -83,13 +85,33 @@ class ProphetForecaster(Forecaster):
                 print(e)
 
 
-        new_ts = forecast[["ds","yhat"]].copy().rename(columns = {"yhat":self.data._target,"ds":"dates"}).set_index("dates")[self.data._target]
+        prediction = forecast[["ds","yhat"]].copy().rename(columns = {"yhat":self.data._target,"ds":"dates"}).set_index("dates")[self.data._target]
+        pred_train,pred = prediction.iloc[:-periods],prediction.iloc[-periods:]
 
 
-        return forecast,new_ts
+        return pred,pred_train,forecast
 
 
-    def train_test_predict(self,**kwargs):
+
+
+
+
+    def train_test_predict(self,periods = 30,**kwargs):
         
 
-        train,test = 
+        train,test = self.data.train_test_split(periods = periods,**kwargs)
+
+
+        pred_test,pred_train,_ = self.predict(train = train,show = False)
+
+
+        y_train,y_test = train[self.data._target],test[self.data._target]
+
+
+        metrics_train = self._compute_all_metrics(y_train,pred_train)
+        metrics_test = self._compute_all_metrics(y_test,pred_test)
+
+
+        return metrics_train,metrics_test
+
+
