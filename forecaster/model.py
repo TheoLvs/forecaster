@@ -57,6 +57,8 @@ class Forecaster(object):
 
 
     def train_test_predict(self,periods = 30,**kwargs):
+        """Base train test predict function
+        """
         
 
         train,test = self.data.train_test_split(periods = periods,**kwargs)
