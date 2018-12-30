@@ -50,6 +50,20 @@ class Forecaster(object):
         return np.sqrt(mean_squared_error(y_true,y_pred))
 
 
+    @staticmethod
+    def _scores_mse(y_true, y_pred):
+        '''mean absolute error'''
+        return mean_squared_error(y_true,y_pred)
+
+
+    def _scores_accuracy(self,y_true, y_pred):
+        '''Accuracy
+        Needs rework
+        '''
+        return 1 - (self._scores_rmse(y_true,y_pred)/y_true.mean())
+
+
+
     def _compute_all_metrics(self,y_true,y_pred):
 
         metrics = {
@@ -57,6 +71,8 @@ class Forecaster(object):
             "mape":self._scores_mape(y_true,y_pred),
             "mae":self._scores_mae(y_true,y_pred),
             "rmse":self._scores_rmse(y_true,y_pred),
+            "mse":self._scores_mse(y_true,y_pred),
+            # "accuracy":self._scores_accuracy(y_true,y_pred),
         }
 
         return metrics

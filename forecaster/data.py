@@ -180,7 +180,7 @@ class GranularData(Data):
         self._all_dates = self.index.drop_duplicates()
 
 
-    def train_test_split(self,periods = 30):
+    def train_test_split(self,periods = 30,as_dict = True):
         
         # Split dates
         dates_train = self._all_dates[:-periods]
@@ -190,10 +190,24 @@ class GranularData(Data):
         train = self.loc[dates_train]
         test = self.loc[dates_test]
 
-        return train,test
+        # Split X and y
+        X_train = train.drop(self.target,axis = 1)
+        X_test = test.drop(self.target,axis = 1)
+        y_train = train[self.target]
+        y_test = test[self.target]
+
+        if as_dict:
+            return {
+                "X_train":X_train,
+                "X_test":X_test,
+                "y_train":y_train,
+                "y_test":y_test,
+            }
+        else:
+            return X_train,X_test,y_train,y_test
 
 
-    def CV_split(self,n_splits = 5):
+    def CV_split(self,n_splits = 5,as_dict = True):
 
         # Prepare split
         tscv = TimeSeriesSplit(n_splits=n_splits)
@@ -208,7 +222,22 @@ class GranularData(Data):
             train = self.loc[dates_train]
             test = self.loc[dates_test]
 
-            yield train,test
+            # Split X and y
+            X_train = train.drop(self.target,axis = 1)
+            X_test = test.drop(self.target,axis = 1)
+            y_train = train[self.target]
+            y_test = test[self.target]
+
+            if as_dict:
+                yield {
+                    "X_train":X_train,
+                    "X_test":X_test,
+                    "y_train":y_train,
+                    "y_test":y_test,
+                }
+            else:
+                yield X_train,X_test,y_train,y_test
+
 
 
 
