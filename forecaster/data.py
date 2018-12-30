@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook
 import seaborn as sns
 from statsmodels import api as sm
+from sklearn.model_selection import TimeSeriesSplit
 
 
 
@@ -30,7 +31,7 @@ from statsmodels import api as sm
 
 class Data(pd.DataFrame):
 
-    def __init__(self,data,date_column,target,dayfirst = False):
+    def __init__(self,data,date_column,target,dayfirst = False,categorical_vars = None):
         """Base data class for Forecaster library
 
         Args:
@@ -46,6 +47,8 @@ class Data(pd.DataFrame):
         data = data.copy()
         data[date_column] = pd.to_datetime(data[date_column],dayfirst = dayfirst)
         data.set_index(date_column,inplace = True)
+        data.sort_index(inplace = True)
+        
 
         # Init data
         super().__init__(data)
@@ -53,23 +56,49 @@ class Data(pd.DataFrame):
         # Set attributes
         assert target in data.columns
         self._target = target
+        self._categorical_vars = []
         self._freq = self.index.inferred_freq
-        print(f"Inferred time granularity is {self._freq}")
+        print(f"... Inferred time granularity is {self._freq}")
 
-
+        # Handling Categorical variables
+        if categorical_vars is not None:
+            print(f"... Categorical variables are {categorical_vars}")
+            for col in categorical_vars:
+                self._append_categorical_var(col)
 
     @property
     def target(self):
         return self._target
-    
 
+
+    def _append_categorical_var(self,col):
+        assert col in self.columns
+        self._categorical_vars.append(col)
+        self[col] = self[col].astype("category")
+    
 
     #--------------------------------------------------------------------------------
     # FEATURE ENGINEERING
 
 
     def create_time_features(self):
-        pass
+
+        # Select column with date
+        date_col = self.index
+
+        # Create time features
+        self["year"] = date_col.year
+        self["month"] = date_col.month
+        self["week"] = date_col.week
+        self["day"] = date_col.day
+        self["weekday"] = date_col.weekday_name
+        # self["weekday_number"] = date_col.dayofweek
+
+        # All columns except for year can be considered as categorical variables
+        for col in ["month","week","day","weekday"]:
+            self._append_categorical_var(col)
+
+
 
 
     def decompose_hp_filter(self,column,alpha = 6.25,show = False):
@@ -139,6 +168,54 @@ class Data(pd.DataFrame):
         pass
 
         
+
+
+
+
+
+class GranularData(Data):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+
+        self._all_dates = self.index.drop_duplicates()
+
+
+    def train_test_split(self,periods = 30):
+        
+        # Split dates
+        dates_train = self._all_dates[:-periods]
+        dates_test = self._all_dates[-periods:]
+
+        # Split real dataset
+        train = self.loc[dates_train]
+        test = self.loc[dates_test]
+
+        return train,test
+
+
+    def CV_split(self,n_splits = 5):
+
+        # Prepare split
+        tscv = TimeSeriesSplit(n_splits=n_splits)
+
+        for train_index,test_index in tscv.split(self._all_dates):
+
+            # Split dates
+            dates_train = self._all_dates[train_index]
+            dates_test = self._all_dates[test_index]
+
+            # Split real dataset
+            train = self.loc[dates_train]
+            test = self.loc[dates_test]
+
+            yield train,test
+
+
+
+
+
+
+
 
 
 

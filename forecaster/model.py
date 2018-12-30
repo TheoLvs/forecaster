@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Custom
-
+from sklearn.metrics import mean_squared_error
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -44,12 +44,19 @@ class Forecaster(object):
         return np.mean(np.abs((y_true - y_pred)))
 
 
+    @staticmethod
+    def _scores_rmse(y_true, y_pred):
+        '''mean absolute error'''
+        return np.sqrt(mean_squared_error(y_true,y_pred))
+
+
     def _compute_all_metrics(self,y_true,y_pred):
 
         metrics = {
             "r2":self._scores_r2(y_true,y_pred),
             "mape":self._scores_mape(y_true,y_pred),
             "mae":self._scores_mae(y_true,y_pred),
+            "rmse":self._scores_rmse(y_true,y_pred),
         }
 
         return metrics
