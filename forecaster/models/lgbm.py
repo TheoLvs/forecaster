@@ -24,6 +24,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import lightgbm as lgb
+import mlflow
 
 # Custom
 from ..model import Forecaster
@@ -39,7 +40,7 @@ class LGBMForecaster(Forecaster):
 
 
     def fit(self,X_train,X_test,y_train,y_test,categorical_vars = None,params = None
-                ,num_boost_round = 100,early_stopping_rounds = 5,objective='regression_l2'):
+                ,num_boost_round = 100,early_stopping_rounds = 5,objective='regression_l2',to_mlflow=False):
         """Fit function of the LGBM forecaster
         Parameters available at https://github.com/Microsoft/LightGBM/blob/master/docs/Parameters.rst
         """
@@ -58,8 +59,8 @@ class LGBMForecaster(Forecaster):
                 'boosting_type': 'gbdt',
                 'objective': objective,
                 'metric': {'l2', 'l1'},
-                'num_leaves': 31,
-                'learning_rate': 0.1,
+                'num_leaves': 500,
+                'learning_rate': 0.001,
                 'feature_fraction': 0.9,
                 'bagging_fraction': 0.8,
                 'bagging_freq': 5,
@@ -74,6 +75,31 @@ class LGBMForecaster(Forecaster):
                         num_boost_round=num_boost_round,
                         valid_sets=test_data,
                         early_stopping_rounds=early_stopping_rounds)
+
+
+
+        if to_mlflow:
+            print("... Saving to MLFlow")
+
+            uri = mlflow.get_tracking_uri()
+            if not uri.startswith("file://"):
+                mlflow.set_tracking_uri(f"file://{uri}")
+
+            with mlflow.start_run():
+
+                params["num_boost_round"] = num_boost_round
+                params["early_stopping_rounds"] = early_stopping_rounds
+
+                for key,value in params.items():
+                    mlflow.log_param(key,value)
+
+
+                pred_test = self.model.predict(X_test)
+                metrics_test = self._compute_all_metrics(y_test,pred_test)
+
+                for key,value in metrics_test.items():
+                    mlflow.log_metric(key,value)
+
 
 
 
